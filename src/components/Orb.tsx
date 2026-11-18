@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
-import { motion, useMotionValue, useReducedMotion, useSpring, useTransform, type MotionValue } from "framer-motion";
+import { motion, useMotionValue, useSpring, useTransform, type MotionValue } from "framer-motion";
+import { MOTION } from "../motion";
+import { ART, useCalm, useSettings } from "../settings";
 
 /* Interactive 3D floating glass orb.
    A frosted glass sphere holds a rotating wireframe mesh (a subdivided icosphere drawn on canvas),
@@ -50,7 +52,7 @@ function icosphere(subdiv: number) {
   return { verts, edges: [...edges].map((e) => e.split("-").map(Number) as [number, number]) };
 }
 
-function MeshCanvas({ mx, my, still }: { mx: MotionValue<number>; my: MotionValue<number>; still: boolean }) {
+function MeshCanvas({ mx, my, still, pal }: { mx: MotionValue<number>; my: MotionValue<number>; still: boolean; pal: (typeof ART)["night"] }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -76,7 +78,7 @@ function MeshCanvas({ mx, my, still }: { mx: MotionValue<number>; my: MotionValu
     resize();
 
     const draw = (time: number) => {
-      const t = still ? 0.6 : time / 9000;
+      const t = still ? 0.6 : time / MOTION.orbSpinMs;
       const ay = t * Math.PI * 2 * 0.35 + mx.get() * 0.6;
       const ax = 0.35 + my.get() * 0.45;
       const cy = Math.cos(ay), sy = Math.sin(ay), cx = Math.cos(ax), sx = Math.sin(ax);
@@ -96,22 +98,22 @@ function MeshCanvas({ mx, my, still }: { mx: MotionValue<number>; my: MotionValu
         const pa = proj[a], pb = proj[b];
         const depth = (pa[2] + pb[2]) / 2; // -1 front .. 1 back
         const alpha = 0.06 + (1 - (depth + 1) / 2) * 0.32;
-        ctx.strokeStyle = `rgba(220,250,255,${alpha.toFixed(3)})`;
+        ctx.strokeStyle = `rgba(${pal.line},${alpha.toFixed(3)})`;
         ctx.beginPath();
         ctx.moveTo(pa[0], pa[1]);
         ctx.lineTo(pb[0], pb[1]);
         ctx.stroke();
       }
-      const pulse = still ? 0.6 : (Math.sin(time / 420) + 1) / 2;
+      const pulse = still ? 0.6 : (Math.sin(time / MOTION.orbPulseMs) + 1) / 2;
       proj.forEach(([x, y, z], i) => {
         const front = 1 - (z + 1) / 2;
         if (hot.has(i)) {
-          ctx.fillStyle = `rgba(0,240,255,${(0.35 + front * 0.65).toFixed(3)})`;
+          ctx.fillStyle = `rgba(${pal.accent},${(0.35 + front * 0.65).toFixed(3)})`;
           ctx.beginPath();
           ctx.arc(x, y, 2.2 + pulse * 2.2 * front, 0, Math.PI * 2);
           ctx.fill();
         } else {
-          ctx.fillStyle = `rgba(255,255,255,${(0.12 + front * 0.6).toFixed(3)})`;
+          ctx.fillStyle = `rgba(${pal.fg},${(0.12 + front * 0.6).toFixed(3)})`;
           ctx.fillRect(x - 1, y - 1, 2, 2);
         }
       });
@@ -122,13 +124,14 @@ function MeshCanvas({ mx, my, still }: { mx: MotionValue<number>; my: MotionValu
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, [mx, my, still]);
+  }, [mx, my, still, pal]);
 
   return <canvas ref={ref} className="absolute inset-0 h-full w-full" aria-hidden />;
 }
 
 export function Orb({ className = "" }: { className?: string }) {
-  const reduce = useReducedMotion() ?? false;
+  const reduce = useCalm();
+  const { theme } = useSettings();
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
   const sx = useSpring(mx, { stiffness: 50, damping: 18, mass: 0.6 });
@@ -142,7 +145,7 @@ export function Orb({ className = "" }: { className?: string }) {
   const highlight = useTransform(
     [hx, hy] as MotionValue<number>[],
     ([a, b]: number[]) =>
-      `radial-gradient(circle at ${a}% ${b}%, rgba(255,255,255,0.22), rgba(255,255,255,0.04) 32%, rgba(0,240,255,0.05) 62%, rgba(8,8,10,0) 72%)`,
+      `radial-gradient(circle at ${a}% ${b}%, color-mix(in oklab, var(--color-fg) 22%, transparent), color-mix(in oklab, var(--color-fg) 4%, transparent) 32%, color-mix(in oklab, var(--color-cyan) 5%, transparent) 62%, transparent 72%)`,
   );
 
   useEffect(() => {
@@ -167,26 +170,26 @@ export function Orb({ className = "" }: { className?: string }) {
       <motion.div
         className="relative h-full w-full"
         animate={reduce ? undefined : { y: [0, -14, 0] }}
-        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+        transition={{ duration: MOTION.orbFloatSeconds, repeat: Infinity, ease: "easeInOut" }}
       >
         {/* cyan bloom */}
         <div className="absolute inset-[18%] rounded-full bg-cyan/20 blur-[90px]" />
         {/* orbit rings */}
-        <div className="absolute inset-[-6%] rounded-full border border-white/[0.06]" style={{ transform: "rotateX(72deg)" }} />
+        <div className="absolute inset-[-6%] rounded-full border border-fg/[0.06]" style={{ transform: "rotateX(72deg)" }} />
         <div className="absolute inset-[4%] rounded-full border border-cyan/15" style={{ transform: "rotateX(72deg) rotateY(18deg)" }} />
         {/* glass sphere */}
         <motion.div
-          className="absolute inset-[8%] overflow-hidden rounded-full border border-white/10 backdrop-blur-[2px]"
+          className="absolute inset-[8%] overflow-hidden rounded-full border border-fg/10 backdrop-blur-[2px]"
           style={{
             backgroundImage: highlight,
             boxShadow:
-              "inset 0 0 60px rgba(255,255,255,0.05), inset -30px -40px 80px rgba(0,240,255,0.06), 0 40px 120px rgba(0,0,0,0.6)",
+              "inset 0 0 60px color-mix(in oklab, var(--color-fg) 5%, transparent), inset -30px -40px 80px color-mix(in oklab, var(--color-cyan) 6%, transparent), 0 40px 120px var(--orb-shadow)",
           }}
         >
-          <MeshCanvas mx={sx} my={sy} still={reduce} />
+          <MeshCanvas mx={sx} my={sy} still={reduce} pal={ART[theme]} />
         </motion.div>
         {/* rim light */}
-        <div className="absolute inset-[8%] rounded-full [background:conic-gradient(from_210deg,transparent_0deg,rgba(0,240,255,0.25)_40deg,transparent_90deg)] [mask:radial-gradient(circle,transparent_69%,#000_70.5%)]" />
+        <div className="absolute inset-[8%] rounded-full [background:conic-gradient(from_210deg,transparent_0deg,color-mix(in_oklab,var(--color-cyan)_25%,transparent)_40deg,transparent_90deg)] [mask:radial-gradient(circle,transparent_69%,#000_70.5%)]" />
       </motion.div>
     </motion.div>
   );

@@ -3,12 +3,13 @@ import {
   motion,
   useAnimationFrame,
   useMotionValue,
-  useReducedMotion,
   useScroll,
   useSpring,
   useTransform,
   useVelocity,
 } from "framer-motion";
+import { MOTION } from "../motion";
+import { useCalm } from "../settings";
 
 const wrap = (min: number, max: number, v: number) => {
   const r = max - min;
@@ -18,18 +19,18 @@ const wrap = (min: number, max: number, v: number) => {
 /* Scroll-linked kinetic marquee: drifts on its own, speeds up with scroll velocity
    and flips direction when the reader scrolls back up. */
 export function Marquee({ items, baseVelocity = -2.2, outline = false }: { items: string[]; baseVelocity?: number; outline?: boolean }) {
-  const reduce = useReducedMotion();
+  const reduce = useCalm();
   const baseX = useMotionValue(0);
   const { scrollY } = useScroll();
   const scrollVelocity = useVelocity(scrollY);
   const smooth = useSpring(scrollVelocity, { damping: 50, stiffness: 400 });
-  const factor = useTransform(smooth, [-1000, 0, 1000], [-4, 0, 4], { clamp: false });
+  const factor = useTransform(smooth, [-1000, 0, 1000], [-MOTION.marqueeScrollBoost, 0, MOTION.marqueeScrollBoost], { clamp: false });
   const x = useTransform(baseX, (v) => `${wrap(-25, 0, v)}%`);
   const dir = useRef(1);
 
   useAnimationFrame((_, delta) => {
     if (reduce) return;
-    let move = dir.current * baseVelocity * (delta / 1000);
+    let move = dir.current * baseVelocity * MOTION.marqueeSpeed * (delta / 1000);
     const f = factor.get();
     if (f < 0) dir.current = -1;
     else if (f > 0) dir.current = 1;
@@ -42,8 +43,8 @@ export function Marquee({ items, baseVelocity = -2.2, outline = false }: { items
       {items.map((t) => (
         <span key={t} className="flex items-center">
           <span
-            className={`whitespace-nowrap px-6 font-serif text-[clamp(2.5rem,6vw,5rem)] italic leading-none ${
-              outline ? "text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,0.35)]" : "text-ink"
+            className={`whitespace-nowrap px-6 font-serif text-[clamp(2rem,4.4vw,3.5rem)] italic leading-none ${
+              outline ? "text-transparent [-webkit-text-stroke:1px_color-mix(in_oklab,var(--color-fg)_35%,transparent)]" : "text-ink"
             }`}
           >
             {t}

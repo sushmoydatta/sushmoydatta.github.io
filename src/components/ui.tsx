@@ -8,13 +8,13 @@ const base =
 // hard cyan offset shadow that depresses on click.
 const variants = {
   primary:
-    "bg-white/[0.06] backdrop-blur-md border-white/80 shadow-[4px_4px_0px_#00F0FF] " +
-    "hover:bg-white/[0.1] hover:shadow-[5px_5px_0px_#00F0FF] hover:-translate-x-px hover:-translate-y-px " +
-    "active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_#00F0FF]",
+    "bg-fg/[0.06] backdrop-blur-md border-fg/80 shadow-[4px_4px_0px_var(--color-cyan)] " +
+    "hover:bg-fg/[0.1] hover:shadow-[5px_5px_0px_var(--color-cyan)] hover:-translate-x-px hover:-translate-y-px " +
+    "active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_var(--color-cyan)]",
   ghost:
-    "bg-white/[0.02] backdrop-blur-md border-white/20 shadow-[4px_4px_0px_rgba(255,255,255,0.12)] " +
-    "hover:border-white/60 hover:bg-white/[0.06] " +
-    "active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_rgba(255,255,255,0.12)]",
+    "bg-fg/[0.02] backdrop-blur-md border-fg/20 shadow-[4px_4px_0px_color-mix(in_oklab,var(--color-fg)_12%,transparent)] " +
+    "hover:border-fg/60 hover:bg-fg/[0.06] " +
+    "active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_color-mix(in_oklab,var(--color-fg)_12%,transparent)]",
 };
 
 type Variant = keyof typeof variants;
@@ -61,8 +61,8 @@ export function Arrow({ className = "" }: { className?: string }) {
 export function Tag({ children, accent = false }: { children: ReactNode; accent?: boolean }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[11px] uppercase leading-none tracking-wider ${
-        accent ? "border-cyan/40 text-cyan" : "border-white/12 text-dim"
+      className={`inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[12px] uppercase leading-none tracking-wider ${
+        accent ? "border-cyan/40 text-cyan" : "border-fg/12 text-dim"
       }`}
     >
       {children}
@@ -75,8 +75,8 @@ export function SectionHead({ label, title, aside }: { label: string; title: Rea
   return (
     <div className="mb-10 grid gap-6 lg:mb-14 lg:grid-cols-12 lg:items-end">
       <div className="lg:col-span-8">
-        <p className="mb-4 font-mono text-[12px] uppercase tracking-[0.18em] text-cyan">/ {label}</p>
-        <h2 className="font-serif text-[clamp(2.75rem,6vw,5.5rem)] leading-[0.95] tracking-[-0.02em] text-balance">{title}</h2>
+        <p className="mb-4 font-mono text-[13px] uppercase tracking-[0.18em] text-cyan">/ {label}</p>
+        <h2 className="font-serif text-[clamp(2.4rem,4.6vw,4rem)] leading-[0.95] tracking-[-0.02em] text-balance">{title}</h2>
       </div>
       {aside && <div className="text-[15px] leading-relaxed text-dim lg:col-span-4 lg:pb-2">{aside}</div>}
     </div>
@@ -95,7 +95,7 @@ export function Section({ id, children, className = "" }: { id?: string; childre
 
 export function Cross({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 9 9" className={`pointer-events-none absolute z-10 hidden size-[9px] sm:block text-white/40 ${className}`} aria-hidden>
+    <svg viewBox="0 0 9 9" className={`pointer-events-none absolute z-10 hidden size-[9px] sm:block text-fg/60 ${className}`} aria-hidden>
       <path d="M4.5 0v9M0 4.5h9" stroke="currentColor" strokeWidth="1" />
     </svg>
   );

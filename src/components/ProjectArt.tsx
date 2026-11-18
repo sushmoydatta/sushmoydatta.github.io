@@ -1,12 +1,10 @@
 import type { ReactElement } from "react";
 import type { Project } from "../data";
+import { ART, useSettings } from "../settings";
 
-/* One small technical drawing per project, in hairline white with a cyan signal.
+/* One small technical drawing per project, in hairlines with an accent signal; colours follow the theme.
    Each sits in a 400x160 box and scales to the card. */
 
-const W = "rgba(255,255,255,0.28)";
-const S = "rgba(255,255,255,0.5)";
-const C = "#00F0FF";
 
 function seeded(seed: number) {
   let s = seed;
@@ -14,6 +12,11 @@ function seeded(seed: number) {
 }
 
 export function ProjectArt({ kind }: { kind: Project["art"] }) {
+  const pal = ART[useSettings().theme];
+  const W = `rgba(${pal.fg},0.28)`;
+  const S = `rgba(${pal.fg},0.5)`;
+  const C = pal.accentHex;
+  const BG = pal.bg;
   const r = seeded(kind.length * 977 + 13);
   let body: ReactElement;
 
@@ -32,11 +35,11 @@ export function ProjectArt({ kind }: { kind: Project["art"] }) {
                   <g key={k}>
                     <line x1={x} y1={48} x2={x + k} y2={104} stroke={S} />
                     <line x1={x + k} y1={104} x2={x + k + (ki % 2 ? 8 : -8)} y2={134} stroke={W} />
-                    <circle cx={x + k} cy={104} r={4} fill="#08080A" stroke={S} />
+                    <circle cx={x + k} cy={104} r={4} fill={BG} stroke={S} />
                     <circle cx={x + k + (ki % 2 ? 8 : -8)} cy={134} r={2.5} fill={W} />
                   </g>
                 ))}
-                <circle cx={x} cy={48} r={ri === 1 ? 9 : 7} fill={ri === 1 ? C : "#08080A"} stroke={ri === 1 ? C : S} />
+                <circle cx={x} cy={48} r={ri === 1 ? 9 : 7} fill={ri === 1 ? C : BG} stroke={ri === 1 ? C : S} />
                 {ri === 1 && <circle cx={x} cy={48} r={16} fill="none" stroke={C} strokeOpacity={0.4} />}
               </g>
             );
@@ -123,7 +126,7 @@ export function ProjectArt({ kind }: { kind: Project["art"] }) {
           {pts.map((p, i) => (
             <circle key={i} cx={p[0]} cy={p[1]} r={near.includes(p) ? 3.5 : 2.2} fill={near.includes(p) ? C : S} />
           ))}
-          <circle cx={q[0]} cy={q[1]} r={7} fill="#08080A" stroke={C} strokeWidth={1.5} />
+          <circle cx={q[0]} cy={q[1]} r={7} fill={BG} stroke={C} strokeWidth={1.5} />
         </g>
       );
       break;

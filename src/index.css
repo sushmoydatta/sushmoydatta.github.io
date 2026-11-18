@@ -1,10 +1,15 @@
 @import "tailwindcss";
 
-/* Dark Spatial Editorial: design tokens */
+/* Dark Spatial Editorial: design tokens.
+   These are the Night theme values. Day and Blueprint override them below,
+   keyed off <html data-theme>, and every Tailwind colour class follows.
+   `fg` replaces Tailwind's `white` for hairlines, tints and faded text,
+   so it can flip to dark ink in the Day theme. */
 @theme {
   --color-obsidian: #08080a;
   --color-ink: #f4f4f5;
   --color-dim: #a1a1aa;
+  --color-fg: #ffffff;
   --color-hair: rgba(255, 255, 255, 0.07);
   --color-cyan: #00f0ff;
   --font-serif: "Instrument Serif", "Times New Roman", serif;
@@ -12,30 +17,82 @@
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
+:root {
+  --orb-shadow: rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+
+/* Day: cool light grey, ink text, deep-teal accent (bright cyan is unreadable on light). */
+:root[data-theme="day"] {
+  --color-obsidian: #eef1f5;
+  --color-ink: #0f172a;
+  --color-dim: #475569;
+  --color-fg: #0f172a;
+  --color-hair: rgba(15, 23, 42, 0.1);
+  --color-cyan: #0e7490;
+  --orb-shadow: rgba(15, 23, 42, 0.18);
+  color-scheme: light;
+}
+
+/* Blueprint: engineering-drawing blue with a coral "redline" accent. */
+:root[data-theme="blueprint"] {
+  --color-obsidian: #0c3a6b;
+  --color-ink: #ffffff;
+  --color-dim: #c7dcf2;
+  --color-fg: #ffffff;
+  --color-hair: rgba(255, 255, 255, 0.14);
+  --color-cyan: #ff8a8a;
+  --orb-shadow: rgba(3, 20, 40, 0.5);
+}
+
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 72px;
-  background: #08080a;
-  color-scheme: dark;
+  background: var(--color-obsidian);
 }
 body {
   margin: 0;
-  background: #08080a;
-  color: #f4f4f5;
+  background: var(--color-obsidian);
+  color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   overflow-x: clip;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
+
+/* Blueprint grid, fixed behind the page (major lines every 120px, minor every 24px). */
+:root[data-theme="blueprint"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px) 0 0 / 120px 120px,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px) 0 0 / 120px 120px,
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px) 0 0 / 24px 24px,
+    radial-gradient(80% 80% at 50% 30%, #11467f, #0a2f57);
+}
+
+/* Simple layout: hide the decorative inner grid lines. */
+:root[data-layout="simple"] [data-grid-inner] {
+  display: none !important;
+}
+
 ::selection {
-  background: #00f0ff;
-  color: #08080a;
+  background: var(--color-cyan);
+  color: var(--color-obsidian);
 }
 :focus-visible {
-  outline: 2px solid #00f0ff;
+  outline: 2px solid var(--color-cyan);
   outline-offset: 3px;
 }
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+  body {
+    transition: none;
   }
 }

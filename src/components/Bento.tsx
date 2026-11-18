@@ -1,26 +1,29 @@
 import { useRef, type MouseEvent } from "react";
-import { motion, useMotionTemplate, useMotionValue, useReducedMotion, useSpring, type Variants } from "framer-motion";
+import { motion, useMotionTemplate, useMotionValue, useSpring, type Variants } from "framer-motion";
+import { MOTION } from "../motion";
+import { useCalm, useSettings } from "../settings";
 import { projects, type Project } from "../data";
 import { ProjectArt } from "./ProjectArt";
 import { Arrow, Section, SectionHead, Tag } from "./ui";
 
 const grid: Variants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.09 } },
+  show: { transition: { staggerChildren: MOTION.cardStagger } },
 };
 const item: Variants = {
   hidden: { opacity: 0, y: 48, scale: 0.96 },
-  show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 110, damping: 18, mass: 0.9 } },
+  show: { opacity: 1, y: 0, scale: 1, transition: MOTION.cardSpring },
 };
 
 function TiltCard({ p }: { p: Project }) {
   const ref = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotion();
+  const reduce = useCalm();
+  const simple = useSettings().layout === "simple";
   const rx = useSpring(0, { stiffness: 200, damping: 20 });
   const ry = useSpring(0, { stiffness: 200, damping: 20 });
   const gx = useMotionValue(50);
   const gy = useMotionValue(50);
-  const glow = useMotionTemplate`radial-gradient(420px circle at ${gx}% ${gy}%, rgba(0,240,255,0.10), transparent 60%)`;
+  const glow = useMotionTemplate`radial-gradient(420px circle at ${gx}% ${gy}%, color-mix(in oklab, var(--color-cyan) 10%, transparent), transparent 60%)`;
   const big = p.id === "rca";
 
   const onMove = (e: MouseEvent<HTMLDivElement>) => {
@@ -32,7 +35,7 @@ function TiltCard({ p }: { p: Project }) {
     gx.set(px * 100);
     gy.set(py * 100);
     if (reduce) return;
-    const k = big ? 4 : 7; // larger cards tilt less
+    const k = big ? MOTION.cardTilt * 0.6 : MOTION.cardTilt; // larger cards tilt less
     ry.set((px - 0.5) * k * 2);
     rx.set(-(py - 0.5) * k * 2);
   };
@@ -47,10 +50,10 @@ function TiltCard({ p }: { p: Project }) {
       <div className="relative flex items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <Tag accent={p.kind === "Work"}>{p.kind}</Tag>
-          {p.note && <span className="font-mono text-[11px] uppercase tracking-wider text-white/40">{p.note}</span>}
+          {p.note && <span className="font-mono text-[12px] uppercase tracking-wider text-fg/60">{p.note}</span>}
         </div>
         {p.link && (
-          <span className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-dim transition-colors group-hover:text-cyan">
+          <span className="inline-flex items-center gap-1.5 font-mono text-[12px] uppercase tracking-wider text-dim transition-colors group-hover:text-cyan">
             GitHub <Arrow />
           </span>
         )}
@@ -65,11 +68,11 @@ function TiltCard({ p }: { p: Project }) {
         <p className="mt-3 max-w-[62ch] text-[15px] leading-relaxed text-dim">{p.summary}</p>
 
         {p.figures && (
-          <dl className="mt-5 grid grid-cols-2 border-t border-white/10 sm:grid-cols-4">
+          <dl className="mt-5 grid grid-cols-2 border-t border-fg/10 sm:grid-cols-4">
             {p.figures.map((f) => (
-              <div key={f.l} className="flex flex-col border-white/10 py-3 pr-3 [&:not(:last-child)]:sm:border-r sm:pl-3 sm:first:pl-0">
+              <div key={f.l} className="flex flex-col border-fg/10 py-3 pr-3 [&:not(:last-child)]:sm:border-r sm:pl-3 sm:first:pl-0">
                 <dd className="order-1 font-serif text-[28px] leading-none text-ink">{f.v}</dd>
-                <dt className="order-2 mt-1.5 font-mono text-[11px] uppercase tracking-wider text-white/45">{f.l}</dt>
+                <dt className="order-2 mt-1.5 font-mono text-[12px] uppercase tracking-wider text-fg/60">{f.l}</dt>
               </div>
             ))}
           </dl>
@@ -77,7 +80,7 @@ function TiltCard({ p }: { p: Project }) {
 
         <ul className="mt-5 flex flex-wrap gap-1.5">
           {p.stack.map((s) => (
-            <li key={s} className="border border-white/10 bg-white/[0.03] px-2 py-1 font-mono text-[11px] text-white/70">
+            <li key={s} className="border border-fg/10 bg-fg/[0.03] px-2 py-1 font-mono text-[12px] text-fg/70">
               {s}
             </li>
           ))}
@@ -87,10 +90,10 @@ function TiltCard({ p }: { p: Project }) {
   );
 
   const cls =
-    "group relative flex h-full flex-col overflow-hidden bg-white/[0.03] backdrop-blur-xl border border-white/10 p-6 sm:p-7 transition-colors duration-300 hover:border-white/25";
+    "group relative flex h-full flex-col overflow-hidden bg-fg/[0.03] backdrop-blur-xl border border-fg/10 p-6 sm:p-7 transition-colors duration-300 hover:border-fg/25";
 
   return (
-    <motion.div variants={item} className={p.span} style={{ perspective: 1100 }}>
+    <motion.div variants={item} className={simple ? "" : p.span} style={{ perspective: 1100 }}>
       <motion.div ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} style={{ rotateX: rx, rotateY: ry, transformStyle: "preserve-3d" }} className="h-full">
         {p.link ? (
           <a href={p.link} target="_blank" rel="noreferrer" className={cls} aria-label={`${p.title} on GitHub`}>
@@ -105,13 +108,14 @@ function TiltCard({ p }: { p: Project }) {
 }
 
 export function Bento() {
+  const simple = useSettings().layout === "simple";
   return (
     <Section id="work">
       <SectionHead
         label="Selected work"
         title={
           <>
-            Network data, <em className="text-white/60">made legible.</em>
+            Network data, <em className="text-fg/60">made legible.</em>
           </>
         }
         aside="Three builds from Grameenphone and Searchlite, three personal projects in ML and LLMs, and two theses in wireless and RF."
@@ -121,7 +125,7 @@ export function Bento() {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, margin: "-80px" }}
-        className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-12 lg:gap-5"
+        className={simple ? "grid grid-cols-1 gap-4 md:grid-cols-2" : "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-12 lg:gap-5"}
       >
         {projects.map((p) => (
           <TiltCard key={p.id} p={p} />

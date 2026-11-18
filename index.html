@@ -6,6 +6,20 @@
     <title>Sushmoy Datta</title>
     <meta name="description" content="Sushmoy Datta: telecom and network engineer working on network analytics, root cause analysis and automation. M.Tech ECE, IIT (ISM) Dhanbad." />
     <meta name="theme-color" content="#08080A" />
+    <script>
+      // Apply the visitor's saved theme and layout before the page paints (no flash).
+      (function () {
+        var d = document.documentElement, bars = { night: "#08080A", day: "#EEF1F5", blueprint: "#0C3A6B" };
+        try {
+          var t = localStorage.getItem("sd-theme"), l = localStorage.getItem("sd-layout");
+          if (bars[t]) {
+            d.dataset.theme = t;
+            document.querySelector('meta[name="theme-color"]').setAttribute("content", bars[t]);
+          }
+          if (l === "simple" || l === "showcase") d.dataset.layout = l;
+        } catch (e) {}
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
